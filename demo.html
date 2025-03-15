@@ -94,14 +94,12 @@
 
       // Create HTML for one icon item
       function generateIconHTML(icon) {
-        
+        // icon.className is the exact file name (minus .svg),
+        // so the CSS class is simply that name with no "icon-" prefix.
         return `
-          <div class="grid-item" data-name="icon-${icon.alias}">
-            <div class="icon" style="
-              mask-image: url('${icon.svgPath}');
-              -webkit-mask-image: url('${icon.svgPath}');
-            "></div>
-            <div class="classname">icon-${icon.alias}</div>
+          <div class="grid-item" data-name="${icon.className}">
+            <i class="icon ${icon.className}"></i>
+            <div class="classname">${icon.className}</div>
           </div>
         `;
       }
@@ -111,16 +109,16 @@
         currentPage = page;
 
         const searchTerm = searchInput.value.trim().toLowerCase();
-        // Filter icons based on the search (alias or full_name)
+        // Filter icons based on the search (className or full_name)
         const filtered = allIcons.filter(icon =>
-          icon.alias.toLowerCase().includes(searchTerm) ||
+          icon.className.toLowerCase().includes(searchTerm) ||
           icon.full_name.toLowerCase().includes(searchTerm)
         );
 
         // Calculate total pages for the filtered set
         const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
-        // Clamp 'page' if user typed something that reduces total pages
+        // Clamp 'page' if the filtered results have fewer pages
         if (currentPage > totalPages) {
           currentPage = Math.max(totalPages, 1);
         }

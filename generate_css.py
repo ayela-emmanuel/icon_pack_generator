@@ -4,42 +4,34 @@ import json
 # Configuration
 svg_folder = 'icons'       # Folder where your .svg files live
 output_json = 'icons.json' # JSON metadata file
-output_css = 'icons.css'   # CSS file for basic .icon styling
+output_css = 'icons.css'   # CSS file for all icon definitions
 output_html = 'demo.html'  # Demo HTML file
 items_per_page = 40        # Number of icons per page
 max_page_buttons = 10      # Maximum numbered pagination buttons to show
 
-def readable_class_name(name):
-    """
-    Generate a simpler 'alias' from the raw file name.
-    If there are more than 3 underscore parts, keep the first two and the last part.
-    Otherwise, join all parts with hyphens.
-    """
-    parts = name.split('_')
-    if len(parts) > 3:
-        selected = parts[:2] + [parts[-1]]
-    else:
-        selected = parts
-    return '-'.join(part.lower() for part in selected)
-
 # 1) Build a JSON array of icon data
+#    Each icon's "className" is just the file name without .svg, unchanged.
 icons_data = []
 for filename in os.listdir(svg_folder):
     if filename.lower().endswith('.svg'):
         full_name, _ = os.path.splitext(filename)
-        alias = readable_class_name(full_name)
+        
         icons_data.append({
             "full_name": full_name,
-            "alias": alias,
-            "svgPath": f"{svg_folder}/{filename}"
+            # Keep the exact file name as the className (minus .svg).
+            "className": full_name,
+            # Not strictly necessary, but you could include the path if desired
+            "filePath": f"{svg_folder}/{filename}"
         })
 
 # Write icons.json
 with open(output_json, 'w', encoding='utf-8') as f:
     json.dump(icons_data, f, indent=2)
 
-
-css_content = """/* Global icon styles */
+# 2) Build the CSS content
+#   - We store a base .icon class that defines sizing/masking properties,
+#     plus individual classes matching the file name, pointing directly to the .svg file.
+base_css = """/* Global icon styles */
 :root {
   --icon-size: 2rem;       /* default icon size */
   --icon-color: #333;      /* default icon color */
@@ -50,7 +42,6 @@ css_content = """/* Global icon styles */
   width: var(--icon-size);
   height: var(--icon-size);
   background-color: var(--icon-color);
-  /* We color the icon via background-color and mask it */
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
@@ -60,10 +51,24 @@ css_content = """/* Global icon styles */
 }
 """
 
+icon_classes = []
+for icon in icons_data:
+    class_name = icon["className"]            # e.g. "check_mark"
+    svg_filename = f"{icon['full_name']}.svg" # e.g. "check_mark.svg"
+    css_rule = f""".{class_name} {{
+  mask-image: url("{svg_folder}/{svg_filename}");
+  -webkit-mask-image: url("{svg_folder}/{svg_filename}");
+}}"""
+    icon_classes.append(css_rule)
+
+# Combine everything into one CSS file
+full_css = base_css + "\n\n" + "\n".join(icon_classes)
+
 with open(output_css, 'w', encoding='utf-8') as css_file:
-    css_file.write(css_content)
+    css_file.write(full_css)
 
-
+# 3) Build the HTML demo
+#    - Notice we use <i class="icon {className}"></i> instead of "icon-{className}".
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,14 +165,12 @@ html_content = f"""<!DOCTYPE html>
 
       // Create HTML for one icon item
       function generateIconHTML(icon) {{
-        
+        // icon.className is the exact file name (minus .svg),
+        // so the CSS class is simply that name with no "icon-" prefix.
         return `
-          <div class="grid-item" data-name="icon-${{icon.alias}}">
-            <div class="icon" style="
-              mask-image: url('${{icon.svgPath}}');
-              -webkit-mask-image: url('${{icon.svgPath}}');
-            "></div>
-            <div class="classname">icon-${{icon.alias}}</div>
+          <div class="grid-item" data-name="${{icon.className}}">
+            <i class="icon ${{icon.className}}"></i>
+            <div class="classname">${{icon.className}}</div>
           </div>
         `;
       }}
@@ -177,16 +180,16 @@ html_content = f"""<!DOCTYPE html>
         currentPage = page;
 
         const searchTerm = searchInput.value.trim().toLowerCase();
-        // Filter icons based on the search (alias or full_name)
+        // Filter icons based on the search (className or full_name)
         const filtered = allIcons.filter(icon =>
-          icon.alias.toLowerCase().includes(searchTerm) ||
+          icon.className.toLowerCase().includes(searchTerm) ||
           icon.full_name.toLowerCase().includes(searchTerm)
         );
 
         // Calculate total pages for the filtered set
         const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
-        // Clamp 'page' if user typed something that reduces total pages
+        // Clamp 'page' if the filtered results have fewer pages
         if (currentPage > totalPages) {{
           currentPage = Math.max(totalPages, 1);
         }}
@@ -275,4 +278,4 @@ with open(output_html, 'w', encoding='utf-8') as html_file:
 print(f"JSON file generated: {output_json}")
 print(f"CSS file generated: {output_css}")
 print(f"Demo HTML generated: {output_html}")
-print("Done! Open demo.html in your browser to test JSON-based pagination/search.")
+print("Done! Open {output_html} in your browser to test JSON-based pagination/search.")
