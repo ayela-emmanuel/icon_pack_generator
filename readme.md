@@ -1,4 +1,4 @@
-Below is a sample **README.md** that you can adapt for your own repository. It covers:
+[View Demo](https://ayela-emmanuel.github.io/icon_pack_generator/demo.html).
 
 1. **How to Host** the generated files locally or on a simple web server.  
 2. **How to Use** (both self-contained usage and usage of the Python script).  
