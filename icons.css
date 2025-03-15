@@ -1,0 +1,19 @@
+/* Global icon styles */
+:root {
+  --icon-size: 2rem;       /* default icon size */
+  --icon-color: #333;      /* default icon color */
+}
+
+.icon {
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  background-color: var(--icon-color);
+  /* We color the icon via background-color and mask it */
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
