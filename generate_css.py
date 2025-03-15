@@ -38,9 +38,7 @@ for filename in os.listdir(svg_folder):
 with open(output_json, 'w', encoding='utf-8') as f:
     json.dump(icons_data, f, indent=2)
 
-# 2) Create a minimal icons.css (global .icon style only)
-#    We do NOT generate thousands of icon-specific classes;
-#    each icon is styled inline by referencing its 'svgPath'.
+
 css_content = """/* Global icon styles */
 :root {
   --icon-size: 2rem;       /* default icon size */
@@ -65,11 +63,7 @@ css_content = """/* Global icon styles */
 with open(output_css, 'w', encoding='utf-8') as css_file:
     css_file.write(css_content)
 
-# 3) Generate demo.html that:
-#    - Loads icons.json with fetch
-#    - Paginates 40 icons at a time
-#    - Includes a search box (case-insensitive substring match)
-#    - Creates "Prev / PageNumbers / Next" buttons (no scrolling)
+
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
